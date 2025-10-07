@@ -4,6 +4,7 @@
 #pragma once
 
 #include <vk_types.h>
+#include <vector>
 
 class VulkanEngine {
 public:
@@ -21,12 +22,24 @@ public:
 	VkDevice device;
 	VkSurfaceKHR surface;
 
+	VkSwapchainKHR swapchain;
+	VkFormat swapchain_img_format;
+
+	std::vector<VkImage> swapchain_imgs;
+	std::vector<VkImageView> swapchain_img_views;
+	VkExtent2D swapchain_extend;
+
+
+
 	void init_vulkan();
 	void init_swapchain();
 	void init_commands();
 	void init_sync_structures();
 
 	void init();
+
+	void createSwapChain(uint32_t width, uint32_t height);
+	void destroySwapChain();
 
 	void cleanup();
 
