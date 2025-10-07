@@ -1,0 +1,9 @@
+﻿  Building Custom Rule C:/Users/asumo/Repos/vulkan-guide/third_party/CMakeLists.txt
+  imgui.cpp
+  imgui_demo.cpp
+  imgui_draw.cpp
+  imgui_widgets.cpp
+  imgui_impl_vulkan.cpp
+  imgui_impl_sdl.cpp
+  Generating Code...
+  imgui.vcxproj -> C:\Users\asumo\Repos\vulkan-guide\third_party\Debug\imgui.lib

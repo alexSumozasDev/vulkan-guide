@@ -1,0 +1,9 @@
+{
+	"InstallScripts" : 
+	[
+		"C:/Users/asumo/Repos/vulkan-guide/cmake_install.cmake",
+		"C:/Users/asumo/Repos/vulkan-guide/third_party/cmake_install.cmake",
+		"C:/Users/asumo/Repos/vulkan-guide/src/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

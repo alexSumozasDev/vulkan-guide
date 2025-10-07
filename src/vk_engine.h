@@ -15,15 +15,22 @@ public:
 
 	struct SDL_Window* _window{ nullptr };
 
-	//initializes everything in the engine
+	VkInstance instance;
+	VkDebugUtilsMessengerEXT debug_messenger;
+	VkPhysicalDevice choosen_gpu;
+	VkDevice device;
+	VkSurfaceKHR surface;
+
+	void init_vulkan();
+	void init_swapchain();
+	void init_commands();
+	void init_sync_structures();
+
 	void init();
 
-	//shuts down the engine
 	void cleanup();
 
-	//draw loop
 	void draw();
 
-	//run main loop
 	void run();
 };
