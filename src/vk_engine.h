@@ -6,6 +6,28 @@
 #include <vk_types.h>
 #include <vector>
 
+#define VK_CHECK(x)                                                      \
+    do {                                                                 \
+        VkResult _err = (x);                                             \
+        if (_err < 0) {                  \
+            fprintf(stderr, "Vulkan ERROR (%d) at %s:%d\n",              \
+                    (int)_err, __FILE__, __LINE__);                      \
+            abort();                                                     \
+        }                                                                \
+    } while (0)
+
+
+constexpr unsigned int FRAME_OVERLAP = 2;
+
+struct FrameData {
+	VkCommandPool command_pool;
+	VkCommandBuffer command_buffer;
+
+	VkSemaphore swapchain_semaphore, render_semaphore;
+	VkFence render_fence;
+};
+
+
 class VulkanEngine {
 public:
 
@@ -29,6 +51,11 @@ public:
 	std::vector<VkImageView> swapchain_img_views;
 	VkExtent2D swapchain_extend;
 
+	FrameData frames[FRAME_OVERLAP];
+	FrameData& getCurrentFrame() { return frames[_frameNumber % FRAME_OVERLAP];}
+
+	VkQueue graphics_queue;
+	uint32_t graphics_queue_family;
 
 
 	void init_vulkan();
@@ -47,3 +74,4 @@ public:
 
 	void run();
 };
+
