@@ -1,6 +1,0 @@
-﻿  Building Custom Rule C:/Users/asumo/Repos/vulkan-guide/src/CMakeLists.txt
-  main.cpp
-  vk_engine.cpp
-  vk_initializers.cpp
-  Generating Code...
-  vulkan_guide.vcxproj -> C:\Users\asumo\Repos\vulkan-guide\bin\Debug\vulkan_guide.exe
