@@ -1,9 +1,6 @@
 #pragma once
 #include <vulkan/vulkan.h>
 
-class vk_images
-{
-};
 
 namespace vkutil {
 
@@ -11,3 +8,8 @@ namespace vkutil {
 
 	void copy_image_to_image(VkCommandBuffer cmd, VkImage source, VkImage destination, VkExtent2D srcSize, VkExtent2D dstSize);
 }
+
+class vk_images
+{
+};
+

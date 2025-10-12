@@ -3,3 +3,17 @@
 .vs/
 *.vcxproj
 x64/
+CMakeFiles/
+*.tlog
+*.obj
+*.log
+*.pdb
+third_party/Debug/
+third_party/Release/tinyobjloader.lib
+third_party/imgui.dir/Release/imgui.vcxproj.FileListAbsolute.txt
+*.filters
+*.ilk
+src/vulkan_guide.dir/Debug/vulkan_guide.vcxproj.FileListAbsolute.txt
+src/vulkan_guide.dir/Release/vulkan_guide.vcxproj.FileListAbsolute.txt
+third_party/imgui.dir/Debug/imgui.vcxproj.FileListAbsolute.txt
+third_party/

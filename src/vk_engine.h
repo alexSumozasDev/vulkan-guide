@@ -2,24 +2,16 @@
 // or project specific include files.
 
 #pragma once
-
+#include "vk_userfunctions.h"
 #include <vk_types.h>
 #include <vector>
 #include <queue>
 #include <functional>
+#include "vk_descriptors.h"
 
 
 
 
-#define VK_CHECK(x)                                                      \
-    do {                                                                 \
-        VkResult _err = (x);                                             \
-        if (_err < 0) {                  \
-            fprintf(stderr, "Vulkan ERROR (%d) at %s:%d\n",              \
-                    (int)_err, __FILE__, __LINE__);                      \
-            abort();                                                     \
-        }                                                                \
-    } while (0)
 
 constexpr unsigned int FRAME_OVERLAP = 2;
 
@@ -93,10 +85,21 @@ public:
 	AllocatedImage draw_image;
 	VkExtent2D draw_extent;
 
+	DescriptorAllocator global_descriptor_allocator;
+
+	VkDescriptorSet draw_image_descriptors;
+	VkDescriptorSetLayout draw_image_descriptor_layout;
+
+	VkPipeline gradient_pipeline;
+	VkPipelineLayout gradient_pipeline_layout;
+
 	void init_vulkan();
 	void init_swapchain();
 	void init_commands();
 	void init_sync_structures();
+	void init_descriptors();
+	void init_pipelines();
+	void init_background_pipelines();
 
 	void init();
 
