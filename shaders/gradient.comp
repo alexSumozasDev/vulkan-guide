@@ -1,0 +1,59 @@
+#version 460
+
+// 16x16 threads per workgroup (tile)
+layout (local_size_x = 16, local_size_y = 16) in;
+
+// Bind a storage image (matches your Vulkan descriptor: set=0, binding=0)
+layout (rgba16f, set = 0, binding = 0) uniform image2D outImage;
+
+// Simple hash to create a distinct color per workgroup
+vec3 hashColor(uvec2 id)
+{
+    // integer hash → [0,1] RGB
+    uint n = id.x * 1664525u ^ id.y * 1013904223u;
+    // expand to 3 channels
+    float r = float((n * 2246822519u) & 0xFFu) / 255.0;
+    float g = float((n * 3266489917u) & 0xFFu) / 255.0;
+    float b = float((n *  668265263u) & 0xFFu) / 255.0;
+    return vec3(r, g, b);
+}
+
+void main()
+{
+    ivec2 imgSize = imageSize(outImage);
+    ivec2 pix     = ivec2(gl_GlobalInvocationID.xy);
+
+    // Guard against out-of-bounds when image size isn't a multiple of 16
+    if (pix.x >= imgSize.x || pix.y >= imgSize.y)
+        return;
+
+    // IDs straight from the compute execution model
+    uvec2 wg   = gl_WorkGroupID.xy;        // which 16x16 tile we are in
+    uvec2 lid  = gl_LocalInvocationID.xy;  // [0..15] within the current tile
+    uvec2 gsz  = gl_WorkGroupSize.xy;      // (16, 16)
+
+    // --- 1) Base color by workgroup (each tile a different color)
+    vec3 base = hashColor(wg);
+
+    // --- 2) Local gradient inside the tile (show per-thread position)
+    // X gradient affects red, Y gradient affects green
+    vec2 localUV = vec2(lid) / vec2(gsz - 1u);
+    vec3 localGrad = vec3(localUV, 0.0);
+
+    // Mix: mostly workgroup color, but reveal local variation
+    vec3 color = mix(base, localGrad, 0.45);
+
+    // --- 3) Draw tile borders (workgroup edges)
+    bool border = (lid.x == 0u) || (lid.y == 0u);
+    if (border) {
+        color = vec3(1.0); // white border around each 16x16 tile
+    }
+
+    // --- 4) Global coarse grid every 32 pixels (to compare with tiles)
+    bool coarseGrid = (pix.x % 32 == 0) || (pix.y % 32 == 0);
+    if (coarseGrid) {
+        color = mix(color, vec3(0.0), 0.6); // darken at coarse grid lines
+    }
+
+    imageStore(outImage, pix, vec4(color, 1.0));
+}
