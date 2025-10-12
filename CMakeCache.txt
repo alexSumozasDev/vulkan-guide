@@ -207,7 +207,7 @@ Vulkan_LIBRARY:FILEPATH=C:/VulkanSDK/1.4.321.1/Lib/vulkan-1.lib
 imgui_LIB_DEPENDS:STATIC=general;Vulkan::Vulkan;
 
 //Path to SDL2
-sdl2_DIR:PATH=C:\Users\asumo\Repos\vulkan-guide\third_party\SDL2-2.32.6
+sdl2_DIR:PATH=C:/Users/asumo/Repos/vulkan-guide/third_party/SDL2-2.32.6
 
 //Dependencies for the target
 vkbootstrap_LIB_DEPENDS:STATIC=general;Vulkan::Vulkan;
