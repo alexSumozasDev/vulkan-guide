@@ -111,3 +111,48 @@ VkSubmitInfo2 vkinit::submit_info(VkCommandBufferSubmitInfo* cmd, VkSemaphoreSub
 	return info;
 
 }
+
+VkImageCreateInfo vkinit::image_create_info(VkFormat format, VkImageUsageFlags usage_flags, VkExtent3D extent) {
+
+	VkImageCreateInfo info = {};
+	info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+	info.pNext = nullptr;
+
+	info.arrayLayers = 1;
+
+	info.extent = extent;
+	info.format = format;
+
+	info.imageType = VK_IMAGE_TYPE_2D;
+	info.mipLevels = 1;
+
+	info.samples = VK_SAMPLE_COUNT_1_BIT;
+
+	info.tiling; VK_IMAGE_TILING_OPTIMAL;
+	info.usage = usage_flags;
+
+	return info;
+
+}
+
+VkImageViewCreateInfo vkinit::imageview_create_info(VkFormat format, VkImage img, VkImageAspectFlags aspet_flags) {
+
+
+	VkImageViewCreateInfo info = {};
+
+	info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	info.pNext = nullptr;
+
+	info.format = format;
+	info.image = img;
+	info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+
+	info.subresourceRange.aspectMask = aspet_flags;
+	info.subresourceRange.baseArrayLayer = 0;
+	info.subresourceRange.baseMipLevel = 0;
+	info.subresourceRange.layerCount = 1;
+	info.subresourceRange.levelCount = 1;
+
+	return info;
+
+}

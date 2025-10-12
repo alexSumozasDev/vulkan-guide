@@ -4,5 +4,14 @@
 #pragma once
 
 #include <vulkan/vulkan.h>
+#include "vk_mem_alloc.h"
 
-//we will add our main reusable types here
+struct AllocatedImage {
+
+	VkImage image;
+	VkImageView img_view;
+	VmaAllocation allocation;
+	VkExtent3D img_extent;
+	VkFormat img_format;
+
+};
