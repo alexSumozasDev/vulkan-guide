@@ -8,7 +8,7 @@
 #include <queue>
 #include <functional>
 #include "vk_descriptors.h"
-
+#include <glm/glm.hpp>
 
 
 
@@ -37,6 +37,23 @@ public:
 
 
 };
+
+struct ComputePushConstants {
+	glm::vec4 data1;
+	glm::vec4 data2;
+	glm::vec4 data3;
+	glm::vec4 data4;
+};
+
+struct ComputeEffect {
+	const char* name;
+
+	VkPipeline pipeline;
+	VkPipelineLayout layout;
+
+	ComputePushConstants data;
+};
+
 
 struct FrameData {
 	VkCommandPool command_pool;
@@ -98,6 +115,10 @@ public:
 	VkCommandPool imm_command_pool;
 
 	bool stop_rendering =false;
+
+	std::vector<ComputeEffect> backgroundEffects;
+	int currentBackgroundEffect{ 0 };
+
 
 	void init_vulkan();
 	void init_swapchain();
