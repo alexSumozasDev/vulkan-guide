@@ -156,3 +156,46 @@ VkImageViewCreateInfo vkinit::imageview_create_info(VkFormat format, VkImage img
 	return info;
 
 }
+
+
+VkRenderingAttachmentInfo vkinit::attachment_info(VkImageView view, VkClearValue* clear, VkImageLayout layout /*= VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL*/)
+{
+	VkRenderingAttachmentInfo colorAttachment{};
+	colorAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+	colorAttachment.pNext = nullptr;
+
+	colorAttachment.imageView = view;
+	colorAttachment.imageLayout = layout;
+	colorAttachment.loadOp = clear ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
+	colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+	if (clear) {
+		colorAttachment.clearValue = *clear;
+	}
+
+	return colorAttachment;
+}
+
+VkRenderingInfo vkinit::rendering_info(
+	VkExtent2D                               extent,
+	const VkRenderingAttachmentInfo* color_attachments,
+	const VkRenderingAttachmentInfo* depth_attachment = nullptr,
+	const VkRenderingAttachmentInfo* stencil_attachment = nullptr)
+{
+	VkRenderingInfo info{};
+	info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+	info.pNext = nullptr;
+
+	info.renderArea.offset = { 0, 0 };
+	info.renderArea.extent = extent;
+
+	info.layerCount = 1;   // adjust if rendering to array layers
+	info.viewMask = 0;   // set if using multiview
+
+	info.colorAttachmentCount = 1;
+	info.pColorAttachments = color_attachments;
+
+	info.pDepthAttachment = depth_attachment;
+	info.pStencilAttachment = stencil_attachment;
+
+	return info;
+}

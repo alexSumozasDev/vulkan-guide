@@ -40,3 +40,95 @@ bool vkutil::load_shader_module(const char* filePath, VkDevice device,VkShaderMo
 
 	return true;
 }
+
+
+void PipelineBuilder::clear() {
+
+	input_asssembly = {};
+	input_asssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+
+	rasterizer = {};
+	rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+
+	color_blend_attachment = {};
+
+	multisampling = {};
+	multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+
+	pipeline_layout = {};
+
+	depth_stencil = {};
+	depth_stencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+
+	render_info = {};
+	render_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
+
+	shader_stages.clear();
+}
+
+VkPipeline PipelineBuilder::build_pipeline(VkDevice device) {
+	
+	VkPipelineViewportStateCreateInfo viewportState = {};
+	viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+	viewportState.pNext = nullptr;
+
+	viewportState.viewportCount = 1;
+	viewportState.scissorCount = 1;
+
+	VkPipelineColorBlendStateCreateInfo color_blending = {};
+	color_blending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+	color_blending.pNext = nullptr;
+
+	color_blending.logicOpEnable = VK_FALSE;
+	color_blending.logicOp = VK_LOGIC_OP_COPY;
+	color_blending.attachmentCount = 1;
+	color_blending.pAttachments = &color_blend_attachment;
+
+	VkPipelineVertexInputStateCreateInfo vertex_in_info = {};
+	vertex_in_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+
+	VkGraphicsPipelineCreateInfo pipeline_info = {};
+	pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+	pipeline_info.pNext = &render_info;
+
+	pipeline_info.stageCount = (uint32_t)shader_stages.size();
+	pipeline_info.pStages = shader_stages.data();
+	pipeline_info.pStages = shader_stages.data();
+	pipeline_info.pVertexInputState = &vertex_in_info;
+	pipeline_info.pInputAssemblyState = &input_asssembly;
+	pipeline_info.pViewportState = &viewportState;
+	pipeline_info.pRasterizationState = &rasterizer;
+	pipeline_info.pMultisampleState = &multisampling;
+	pipeline_info.pColorBlendState = &color_blending;
+	pipeline_info.pDepthStencilState = &depth_stencil;
+	pipeline_info.layout = pipeline_layout;
+
+	VkDynamicState state[] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+
+	VkPipelineDynamicStateCreateInfo dynamicInfo = {  };
+	dynamicInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+	dynamicInfo.pDynamicStates = &state[0];
+	dynamicInfo.dynamicStateCount = 2;
+
+	pipeline_info.pDynamicState = &dynamicInfo;
+
+	VkPipeline new_pipeline;
+
+	if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &new_pipeline) != VK_SUCCESS) {
+
+		std::cout << "Fallo al crear el pipeline";
+
+		return VK_NULL_HANDLE;
+	}
+	else {
+		return new_pipeline;
+	}
+}
+
+
+void PipelineBuilder::setShaders(VkShaderModule vertex_shader, VkShaderModule fragment_module) {
+
+	shader_stages.clear();
+
+	// TO_DO TO BE CONTINUED
+}

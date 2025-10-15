@@ -23,9 +23,17 @@ namespace vkinit {
 	VkImageCreateInfo image_create_info(VkFormat format, VkImageUsageFlags flags, VkExtent3D extent);
 
 	VkImageViewCreateInfo imageview_create_info(VkFormat format, VkImage img, VkImageAspectFlags aspet_flags);
+
+	VkRenderingAttachmentInfo attachment_info(VkImageView view, VkClearValue* clear, VkImageLayout layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+
+	VkRenderingInfo rendering_info(
+		VkExtent2D                               extent,
+		const VkRenderingAttachmentInfo* color_attachments,
+		const VkRenderingAttachmentInfo* depth_attachment,
+		const VkRenderingAttachmentInfo* stencil_attachment);
+
+
 }
-
-
 
 
 

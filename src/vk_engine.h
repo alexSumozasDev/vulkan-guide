@@ -93,6 +93,12 @@ public:
 	VkPipeline gradient_pipeline;
 	VkPipelineLayout gradient_pipeline_layout;
 
+	VkFence imm_fence;
+	VkCommandBuffer imm_command_buffer;
+	VkCommandPool imm_command_pool;
+
+	bool stop_rendering =false;
+
 	void init_vulkan();
 	void init_swapchain();
 	void init_commands();
@@ -100,6 +106,7 @@ public:
 	void init_descriptors();
 	void init_pipelines();
 	void init_background_pipelines();
+
 
 	void init();
 
@@ -112,5 +119,14 @@ public:
 	void draw_background(VkCommandBuffer cmd);
 
 	void run();
+
+	// DEARIMGUI 
+
+	void inmediateSubmit(std::function<void(VkCommandBuffer cmd)>&& function);
+
+	void init_imgui();
+
+	void draw_imgui(VkCommandBuffer cmd, VkImageView targetImageView);
+
 };
 
