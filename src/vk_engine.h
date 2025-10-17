@@ -119,6 +119,8 @@ public:
 	std::vector<ComputeEffect> backgroundEffects;
 	int currentBackgroundEffect{ 0 };
 
+	VkPipelineLayout triangle_pipeline_layout;
+	VkPipeline triangle_pipeline;
 
 	void init_vulkan();
 	void init_swapchain();
@@ -127,6 +129,7 @@ public:
 	void init_descriptors();
 	void init_pipelines();
 	void init_background_pipelines();
+	void init_triangle_pipeline();
 
 
 	void init();
@@ -148,6 +151,8 @@ public:
 	void init_imgui();
 
 	void draw_imgui(VkCommandBuffer cmd, VkImageView targetImageView);
+
+	void draw_geometry(VkCommandBuffer cmd);
 
 };
 

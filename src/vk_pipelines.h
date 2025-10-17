@@ -31,4 +31,12 @@ public:
 
 	void setShaders(VkShaderModule vertex_shader, VkShaderModule fragment_module);
 
+	void setInputTopology(VkPrimitiveTopology topology);
+	void setPolygonMode(VkPolygonMode mode);
+	void setCullMode(VkCullModeFlags cullMode, VkFrontFace frontFace);
+	void setMultisamplingNone();
+	void disableBlending();
+	void setColorAttachmentFormat(VkFormat format);
+	void setDepthFormat(VkFormat format);
+	void disableDepthTest();
 };

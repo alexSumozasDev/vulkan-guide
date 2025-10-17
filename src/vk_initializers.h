@@ -32,7 +32,8 @@ namespace vkinit {
 		const VkRenderingAttachmentInfo* depth_attachment,
 		const VkRenderingAttachmentInfo* stencil_attachment);
 
-
+	VkPipelineLayoutCreateInfo pipeline_layout_create_info();
+	VkPipelineShaderStageCreateInfo pipelineShaderStageCreateInfo(VkShaderStageFlagBits stage, VkShaderModule shaderModule);
 }
 
 
