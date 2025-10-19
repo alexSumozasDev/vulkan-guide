@@ -18,7 +18,11 @@
 #include <vk_pipelines.h>
 #include <iostream>
 
-
+#include <array>
+#include <span>
+#include <functional>
+#include <thread>
+#include <chrono>
 
 
 #include "imgui.h"
@@ -51,6 +55,7 @@ void VulkanEngine::init()
 	init_descriptors();
 	init_pipelines();
 	init_imgui();
+	init_default_data();
 	
 
 	_isInitialized = true;
@@ -377,6 +382,7 @@ void VulkanEngine::init_descriptors() {
 void VulkanEngine::init_pipelines() {
 	init_background_pipelines();
 	init_triangle_pipeline();
+	init_mesh_pipeline();
 }
 
 void VulkanEngine::init_background_pipelines() {
@@ -733,6 +739,181 @@ void VulkanEngine::draw_geometry(VkCommandBuffer cmd) {
 
 	vkCmdDraw(cmd, 3, 1, 0, 0);
 
+	vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, mesh_pipeline);
+
+	GPUDrawPushConstants push_constants;
+	push_constants.world_matrix = glm::mat4{ 1.f };
+	push_constants.vertex_buffer = rectangle.vertex_buffer_addres;
+
+	vkCmdPushConstants(cmd, mesh_pipeline_layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(GPUDrawPushConstants), &push_constants);
+	vkCmdBindIndexBuffer(cmd, rectangle.index_buffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+
+	vkCmdDrawIndexed(cmd, 6, 1, 0, 0, 0);
+
 	vkCmdEndRendering(cmd);
+
+}
+
+AllocatedBuffer VulkanEngine::createBuffer(size_t alloc_size, VkBufferUsageFlags usage, VmaMemoryUsage memory_usage) {
+	
+	VkBufferCreateInfo info = {};
+
+	info.pNext = nullptr;
+	info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	info.size = alloc_size;
+	info.usage = usage;
+	
+	VmaAllocationCreateInfo alloc_info = {};
+	alloc_info.usage = memory_usage;
+	alloc_info.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
+	AllocatedBuffer new_buffer;
+
+	VK_CHECK(vmaCreateBuffer(vma_allocator, &info, &alloc_info, &new_buffer.buffer, &new_buffer.allocation, &new_buffer.info));
+
+	return new_buffer;
+}
+
+void VulkanEngine::destroy_buffer(const AllocatedBuffer& buffer) {
+
+	vmaDestroyBuffer(vma_allocator, buffer.buffer, buffer.allocation);
+
+}
+
+GPUMeshBuffers VulkanEngine::uploadMesh(std::span<uint32_t> indices, std::span<Vertex> vertices) {
+
+	const size_t vertex_buffer_size = vertices.size() * sizeof(Vertex);
+
+	const size_t index_buffer_size = indices.size() * sizeof(uint32_t);
+
+	GPUMeshBuffers new_surface;
+
+	new_surface.vertex_buffer = createBuffer(vertex_buffer_size, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
+
+	VkBufferDeviceAddressInfo device_address_info = {};
+	device_address_info.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
+	device_address_info.buffer = new_surface.vertex_buffer.buffer;
+
+	new_surface.vertex_buffer_addres = vkGetBufferDeviceAddress(device, &device_address_info);
+
+	new_surface.index_buffer = createBuffer(index_buffer_size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
+
+	AllocatedBuffer staging = createBuffer(vertex_buffer_size + index_buffer_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
+
+	void* data = staging.allocation->GetMappedData();
+
+	memcpy(data, vertices.data(), vertex_buffer_size);
+
+	memcpy((char*)data + vertex_buffer_size, indices.data(), index_buffer_size);
+
+	inmediateSubmit([&](VkCommandBuffer cmd) {
+		VkBufferCopy vertexCopy{ 0 };
+		vertexCopy.dstOffset = 0;
+		vertexCopy.srcOffset = 0;
+		vertexCopy.size = vertex_buffer_size;
+
+		vkCmdCopyBuffer(cmd, staging.buffer, new_surface.vertex_buffer.buffer, 1, &vertexCopy);
+
+		VkBufferCopy indexCopy{ 0 };
+		indexCopy.dstOffset = 0;
+		indexCopy.srcOffset = vertex_buffer_size;
+		indexCopy.size = index_buffer_size;
+
+		vkCmdCopyBuffer(cmd, staging.buffer, new_surface.index_buffer.buffer, 1, &indexCopy);
+
+
+		});
+
+	destroy_buffer(staging);	
+
+	return new_surface;
+}
+
+void VulkanEngine::init_mesh_pipeline() {
+
+
+	VkShaderModule  mesh_frag_shader;
+
+	if (!vkutil::load_shader_module("../../shaders/colored_triangle.frag.spv", device, &mesh_frag_shader)) {
+		std::cout << "Error al hacer el frag shader";
+	}
+
+	VkShaderModule mesh_vert_shader;
+
+	if (!vkutil::load_shader_module("../../shaders/colored_triangle_mesh.vert.spv", device, &mesh_vert_shader)) {
+		std::cout << "Error al hacer el vert shader";
+	}
+
+	VkPushConstantRange buffer_range{};
+
+	buffer_range.offset = 0;
+	buffer_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+	buffer_range.size = sizeof(GPUDrawPushConstants);
+
+	VkPipelineLayoutCreateInfo pipeline_layout_info = vkinit::pipeline_layout_create_info();
+
+	pipeline_layout_info.pPushConstantRanges = &buffer_range;
+	pipeline_layout_info.pushConstantRangeCount = 1;
+
+	VK_CHECK(vkCreatePipelineLayout(device, &pipeline_layout_info, nullptr, &mesh_pipeline_layout));
+
+	PipelineBuilder pipeline_builder;
+
+	pipeline_builder.pipeline_layout = mesh_pipeline_layout;
+	pipeline_builder.setShaders(mesh_vert_shader, mesh_frag_shader);
+	pipeline_builder.setInputTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+	pipeline_builder.setPolygonMode(VK_POLYGON_MODE_FILL);
+	pipeline_builder.setCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE);
+	pipeline_builder.setMultisamplingNone();
+	pipeline_builder.disableBlending();
+	pipeline_builder.disableDepthTest();
+
+	pipeline_builder.setColorAttachmentFormat(draw_image.img_format);
+	pipeline_builder.setDepthFormat(VK_FORMAT_UNDEFINED);
+
+	mesh_pipeline = pipeline_builder.build_pipeline(device);
+
+	vkDestroyShaderModule(device, mesh_frag_shader, nullptr);
+	vkDestroyShaderModule(device, mesh_vert_shader, nullptr);
+
+	main_deletion_queue.pushFunction([&]() {
+
+		vkDestroyPipelineLayout(device, mesh_pipeline_layout, nullptr);
+		vkDestroyPipeline(device, mesh_pipeline, nullptr);
+
+		});
+
+}
+
+void VulkanEngine::init_default_data() {
+	std::array<Vertex, 4>	rect_vertices;
+
+	rect_vertices[0].position = { 0.5,-0.5, 0 };
+	rect_vertices[1].position = { 0.5,0.5, 0 };
+	rect_vertices[2].position = { -0.5,-0.5, 0 };
+	rect_vertices[3].position = { -0.5,0.5, 0 };
+
+	rect_vertices[0].color = { 0,0, 0,1 };
+	rect_vertices[1].color = { 0.5,0.5,0.5 ,1 };
+	rect_vertices[2].color = { 1,0, 0,1 };
+	rect_vertices[3].color = { 0,1, 0,1 };
+
+	std::array<uint32_t, 6> rect_indices;
+
+	rect_indices[0] = 0;
+	rect_indices[1] = 1;
+	rect_indices[2] = 2;
+
+	rect_indices[3] = 2;
+	rect_indices[4] = 1;
+	rect_indices[5] = 3;
+
+	rectangle = uploadMesh(rect_indices, rect_vertices);
+
+
+	main_deletion_queue.pushFunction([&]() {
+		destroy_buffer(rectangle.index_buffer);
+		destroy_buffer(rectangle.vertex_buffer);
+		});
 
 }
